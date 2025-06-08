@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INFRATEC Inc. | Project Genesis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes background-pan {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px var(--glow-color), inset 0 0 10px var(--glow-color); }
+            50% { box-shadow: 0 0 35px var(--glow-color), inset 0 0 15px var(--glow-color); }
+        }
+        :root {
+            --glow-color: rgba(106, 139, 205, 0.7);
+        }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #0A0F18;
+            background-image: 
+                radial-gradient(circle at 1px 1px, #3A4A67 1px, transparent 0),
+                radial-gradient(circle at 10px 10px, #3A4A67 0.5px, transparent 0);
+            background-size: 20px 20px;
+            color: #A6B4C8;
+            animation: background-pan 60s linear infinite;
+        }
+        .font-sf { font-family: 'Orbitron', sans-serif; }
+        .section-container {
+            max-width: 900px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: rgba(10, 15, 24, 0.8);
+            border: 1px solid #2C3A54;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(58, 74, 103, 0.2);
+        }
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #6A8BCD;
+            text-shadow: 0 0 8px rgba(106, 139, 205, 0.5);
+            margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .accordion-title {
+            cursor: pointer;
+            padding: 1rem;
+            background: rgba(44, 58, 84, 0.2);
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            border: 1px solid #2C3A54;
+        }
+        .accordion-title:hover {
+            background: rgba(44, 58, 84, 0.4);
+        }
+        .accordion-content {
+            box-sizing: content-box;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding-top 0.5s ease-out, padding-bottom 0.5s ease-out;
+            padding: 0 1.5rem;
+            border-left: 2px solid #2C3A54;
+            margin-left: 0.75rem;
+        }
+        .accordion-content.open {
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-left-color: #6A8BCD;
+        }
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(106, 139, 205, 0.1);
+            color: #6A8BCD;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            border: 1px solid #2C3A54;
+            cursor: pointer;
+        }
+        .final-gate-btn {
+            z-index: 10;
+            animation: pulse 2.5s infinite;
+            border-color: var(--glow-color);
+            color: var(--glow-color);
+        }
+        .final-gate-btn:hover {
+             transform: scale(1.05);
+             box-shadow: 0 0 45px var(--glow-color), inset 0 0 20px var(--glow-color);
+        }
+        .text-accent { color: #F2C75C; }
+        #audio-controls {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            background-color: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+        #volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 80px;
+            background: transparent;
+            cursor: pointer;
+        }
+        #volume-slider::-webkit-slider-runnable-track {
+            background: #30363d;
+            height: 4px;
+            border-radius: 2px;
+        }
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -6px;
+            background-color: #58a6ff;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+        }
+        #final-animation-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #final-animation-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+        .gate-wrapper {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (min-width: 768px) {
+            .gate-wrapper {
+                flex-direction: row;
+            }
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <audio id="nav-click-sound" src="https://www.dropbox.com/scl/fi/99lh15f066eg5pztjjq19/iivsvie06fp-mechanical-object-sfx-7.mp3?rlkey=vchmi9ip2ffp3iak26thqvtr4&st=vl5xdcx5&dl=1" preload="auto"></audio>
+    <audio id="item-click-sound" src="https://www.dropbox.com/scl/fi/wufihoifz2g3v6y3jmuly/.mp3?rlkey=pky56rn3cft0w8q5o3of7zdc1&st=60u0449p&dl=1" preload="auto"></audio>
+    <audio id="background-music" src="https://www.dropbox.com/scl/fi/o5jpcoqrg1zhb2lrev4ek/Music_fx_worldview__anticipationmusic_for_a.mp3?rlkey=vqpdjl6gr9x7iysynnowjymro&st=xa8gwsc5&dl=1" preload="auto" loop></audio>
+    
+    <div id="audio-controls">
+        <button id="mute-btn" class="text-blue-400 hover:text-white transition-colors"></button>
+        <input type="range" id="volume-slider" min="0" max="100" value="50">
+    </div>
+
+    <header class="text-center my-16">
+        <h1 class="font-sf text-4xl md:text-6xl text-blue-300">Project Genesis</h1>
+        <p class="text-lg mt-2">INFRATEC Inc. - New Graduate Recruitment Protocol</p>
+    </header>
+
+    <main>
+        <section class="section-container">
+            <h2 class="text-2xl"><i data-lucide="scan-line"></i>Module 01: Project Genesis Briefing</h2>
+            <p class="mb-4">ようこそ、候補生。君は今、70年の歴史を持つインフラテックが主導する、極秘の都市創生計画『Project Genesis』にアクセスしている。</p>
+            <p>我々の使命は、単なる<strong class="text-accent">「部品メーカー」</strong>の領域を超え、M&Aによる技術統合を経た<strong class="text-accent">「インフラ関連事業の複合企業体」</strong>として、プレキャストコンクリート技術を核に、持続可能な未来都市の礎を築くことにある。このシミュレーションは、そのための最初の１歩だ。</p>
+        </section>
+
+        <section class="section-container">
+            <h2 class="text-2xl"><i data-lucide="network"></i>Module 02: Specialization Matrix</h2>
+            <p class="mb-6">都市創生には多様な専門領域が要求される。自身の適性を見極め、専門領域（ロール）を選択してくれたまえ。</p>
+            <div class="space-y-4">
+                <div class="accordion">
+                    <div class="accordion-title font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">技術職（設計・開発）<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><p>CADを駆使し、未来のスタンダードとなる製品の設計図を描く。顧客の要望に応え、時には現場へ足を運び、「現場・現物・現実」の三現主義で最適な形を追求する、創造性豊かな仕事だ。</p></div>
+                </div>
+                <div class="accordion">
+                    <div class="accordion-title font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">技術職（工場管理）<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><p>生産拠点「ファクトリー」で、生産計画から品質管理、人員配置までを担い、高品質な製品の安定生産を支える。ものづくりの要となる重要な役割だ。</p></div>
+                </div>
+                <div class="accordion">
+                    <div class="accordion-title font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">営業職<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><p>顧客との信頼関係を築き、我々の技術を社会の隅々へ届ける。自分が提案した製品が街の一部となり、人々の生活を支えている実感を得られる、やりがいの大きな仕事だ。</p></div>
+                </div>
+                <div class="accordion">
+                    <div class="accordion-title font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">技術職（施工管理）<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><p>建設の最前線に立ち、「品質・コスト・工程・安全」の4大管理を担うプロジェクトの指揮官。多くの関係者と連携し、構造物が完成した時の達成感は格別だ。</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-container">
+            <h2 class="text-2xl"><i data-lucide="graduation-cap"></i>Module 03: Competency Nexus</h2>
+             <p class="mb-6">候補生は以下のプログラムを通じて、段階的に能力を解放していく。</p>
+             <div class="space-y-4">
+                <div class="accordion">
+                    <div class="accordion-title font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">新人研修<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><p>入社後2週間の集中プログラム。1週目は役員講話やビジネスマナー、企業理念などを学び、2週目は工場で製品製造の現場を体験。基礎からしっかりサポートする。</p></div>
+                </div>
+                <div class="accordion">
+                    <div class="accordion-title font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">OJT・専門研修<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><p>配属先で先輩技術者の指導のもと実務を経験(OJT)。メンター制度もあり、安心して業務を覚えられます。各分野の専門性を高めるための研修も随時実施し、継続的なスキルアップが可能だ。</p></div>
+                </div>
+                 <div class="accordion">
+                    <div class="accordion-title font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">資格取得支援<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><p>「現状維持は退化」の理念のもと、挑戦を全力で支援。業務に必要な資格取得の費用補助はもちろん、難関資格取得者には最大<strong class="text-accent">10万円</strong>のお祝い金と、月々の資格手当（最大<strong class="text-accent">2万円</strong>）も支給する。</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-container">
+            <h2 class="text-2xl"><i data-lucide="database"></i>Module 04: System Parameters</h2>
+            <p class="mb-6">シミュレーション環境（労働環境）および、君の未来に関わる重要パラメータを開示する。</p>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center p-4 rounded-lg bg-black/20 mb-8">
+                <div><p class="font-sf text-3xl text-blue-300">125<span class="text-lg">日</span></p><p class="text-xs">年間休日</p></div>
+                <div><p class="font-sf text-3xl text-blue-300">7<span class="text-lg">時間</span></p><p class="text-xs">月平均残業</p></div>
+                <div><p class="font-sf text-3xl text-blue-300">13.6<span class="text-lg">年</span></p><p class="text-xs">平均勤続年数</p></div>
+                <div><p class="font-sf text-3xl text-blue-300">92.3<span class="text-lg">%</span></p><p class="text-xs">新卒3年以内定着率</p></div>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="accordion">
+                    <div class="accordion-title font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">報酬・待遇<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><div class="space-y-6 text-sm">
+                        <div>
+                           <h4 class="font-bold text-blue-400 text-base mb-2">初任給（2024年4月実績）</h4>
+                            <ul class="list-disc list-inside space-y-1 pl-2">
+                                <li>大学院了／月給 <span class="text-accent">259,463円</span></li>
+                                <li>大学・高専卒／月給 <span class="text-accent">248,594円</span></li>
+                                <li>短大・専門学校卒／月給 <span class="text-accent">234,025円</span></li>
+                            </ul>
+                            <p class="text-xs mt-2 opacity-70">※20時間分の固定残業代含む。超過分は別途支給。</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-blue-400 text-base mb-2">昇給・賞与</h4>
+                            <p class="pl-2">昇給：年1回(4月)<br>賞与：年2回(7月, 12月)</p>
+                        </div>
+                    </div></div>
+                </div>
+                 <div class="accordion">
+                    <div class="accordion-title font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">諸手当<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><div class="space-y-6 text-sm">
+                        <p class="pl-2">通勤手当、資格手当、家族手当、住宅手当、役職手当、勤務地手当など、各種手当を用意しています。</p>
+                        <div class="accordion ml-2">
+                            <div class="accordion-title !p-3 !text-sm !bg-black/20 font-sf text-blue-300 flex justify-between items-center" onclick="toggleAccordion(this)">勤務地手当 詳細<i data-lucide="chevron-down" class="transition-transform w-4 h-4"></i></div>
+                            <div class="accordion-content"><div class='space-y-2 text-sm'>
+                                <p>🏙️ <strong class='text-blue-400'>【東京】</strong> <span class='text-accent'>35,000円</span></p>
+                                <p>🏯 <strong class='text-blue-400'>【大阪・仙台】</strong> <span class='text-accent'>25,000円</span></p>
+                                <p>🍵 <strong class='text-blue-400'>【京都・名古屋】</strong> <span class='text-accent'>21,000円</span></p>
+                                <p>🍁 <strong class='text-blue-400'>【広島・静岡・三重】</strong> <span class='text-accent'>18,000円</span></p>
+                                <p>🍜 <strong class='text-blue-400'>【福岡・奄美・岡山・滋賀・兵庫・和歌山】</strong> <span class='text-accent'>14,000円</span></p>
+                                <p>🌋 <strong class='text-blue-400'>【鹿児島 ほか】</strong> なし</p>
+                            </div></div>
+                        </div>
+                    </div></div>
+                </div>
+                <div class="accordion">
+                    <div class="accordion-title font-sf text-yellow-400 flex justify-between items-center" onclick="toggleAccordion(this)">奨学金補助制度<i data-lucide="chevron-down" class="transition-transform"></i></div>
+                    <div class="accordion-content"><p>社員の経済的負担を軽減し、安心して業務に集中できる環境を提供するため、月々の奨学金返済を会社が補助する。（※規定有り）</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-container text-center">
+             <h2 class="text-2xl justify-center"><i data-lucide="log-in"></i>Final Module: Access Protocol</h2>
+             <p class="mb-6">シミュレーションは以上だ。君のポテンシャルは確認した。<br>未来へのアクセスゲートが開かれる。君の旅は、ここから始まる。</p>
+             <div id="final-animation-container">
+                 <canvas id="final-animation-canvas"></canvas>
+                <div class="gate-wrapper">
+                    <a href="https://job.mynavi.jp/27/pc/search/corp82951/outline.html" target="_blank" class="btn text-sm final-gate-btn" style="--glow-color: #F2C75C;" onclick="playItemSound()">ENTRY GATE (MYNAVI)</a>
+                    <a href="https://recruit.infratec.co.jp/" target="_blank" class="btn text-sm final-gate-btn" style="--glow-color: #6A8BCD;" onclick="playItemSound()">OFFICIAL DATABASE</a>
+                    <a href="https://www.instagram.com/infratec_recruit/" target="_blank" class="btn text-sm final-gate-btn" style="--glow-color: #E1306C;" onclick="playItemSound()">ACTIVITY LOG (INSTAGRAM)</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <script>
+        lucide.createIcons();
+
+        // --- Sound & Music ---
+        const navClickSound = document.getElementById('nav-click-sound');
+        const itemClickSound = document.getElementById('item-click-sound');
+        const backgroundMusic = document.getElementById('background-music');
+        const muteBtn = document.getElementById('mute-btn');
+        const volumeSlider = document.getElementById('volume-slider');
+
+        function playNavSound() { navClickSound.currentTime=0; navClickSound.play().catch(e=>{}); }
+        function playItemSound() { itemClickSound.currentTime=0; itemClickSound.play().catch(e=>{}); }
+        
+        let musicStarted = false;
+        function startMusic() {
+            if (!musicStarted) {
+                backgroundMusic.play().catch(e => {});
+                musicStarted = true;
+            }
+        }
+        document.body.addEventListener('click', startMusic, { once: true });
+        
+        const speakerOnIcon = `<i data-lucide="volume-2"></i>`;
+        const speakerOffIcon = `<i data-lucide="volume-x"></i>`;
+        muteBtn.innerHTML = speakerOnIcon;
+        lucide.createIcons({nodes: [muteBtn]});
+        backgroundMusic.volume = 0.5;
+
+        muteBtn.addEventListener('click', () => {
+            backgroundMusic.muted = !backgroundMusic.muted;
+            updateMuteButton();
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            backgroundMusic.volume = e.target.value / 100;
+            if (backgroundMusic.volume > 0) backgroundMusic.muted = false;
+            updateMuteButton();
+        });
+
+        function updateMuteButton() {
+            if (backgroundMusic.muted || backgroundMusic.volume === 0) {
+                muteBtn.innerHTML = speakerOffIcon;
+                if(backgroundMusic.volume === 0) volumeSlider.value = 0;
+            } else {
+                muteBtn.innerHTML = speakerOnIcon;
+            }
+            lucide.createIcons({nodes: [muteBtn]});
+        }
+        
+        // --- Accordion Logic ---
+        function toggleAccordion(element) {
+            playItemSound();
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('svg');
+            const isOpening = !content.style.maxHeight || content.style.maxHeight === '0px';
+
+            // Close other top-level accordions if this is a top-level one
+            if (!element.closest('.accordion-content')) {
+                 const allTopLevelContent = document.querySelectorAll('.section-container > .space-y-4 > .accordion > .accordion-content');
+                 allTopLevelContent.forEach(c => {
+                    if (c !== content && c.style.maxHeight) {
+                        c.style.maxHeight = null;
+                        c.classList.remove('open');
+                        c.previousElementSibling.querySelector('svg').style.transform = 'rotate(0deg)';
+                    }
+                });
+            }
+            
+            if (isOpening) {
+                content.style.maxHeight = content.scrollHeight + "px";
+                content.classList.add('open');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.style.maxHeight = null;
+                content.classList.remove('open');
+                icon.style.transform = 'rotate(0deg)';
+            }
+
+            // Adjust parent accordion's height
+            let parentAccordionContent = element.closest('.accordion-content.open');
+            if (parentAccordionContent) {
+                 setTimeout(() => {
+                    parentAccordionContent.style.maxHeight = parentAccordionContent.scrollHeight + "px";
+                }, 300); // Wait for child animation
+            }
+        }
+        
+        // --- Final Animation Logic ---
+        const canvas = document.getElementById('final-animation-canvas');
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
+
+        function resizeCanvas() {
+            const container = document.getElementById('final-animation-container');
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+        }
+
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const fontSize = 14;
+        let columns;
+        let drops;
+
+        function setupAnimation() {
+            resizeCanvas();
+            columns = Math.floor(canvas.width / fontSize);
+            drops = [];
+            for(let i = 0; i < columns; i++) {
+                drops[i] = Math.floor(Math.random() * canvas.height/fontSize);
+            }
+        }
+        
+        function drawAnimation() {
+            ctx.fillStyle = "rgba(10, 15, 24, 0.1)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "#6A8BCD";
+            ctx.font = fontSize + "px monospace";
+            
+            for(let i = 0; i < drops.length; i++) {
+                const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        function animateFinal() {
+            drawAnimation();
+            animationFrameId = requestAnimationFrame(animateFinal);
+        }
+
+        setupAnimation();
+        animateFinal();
+        window.addEventListener('resize', () => {
+             if (animationFrameId) cancelAnimationFrame(animationFrameId);
+             setupAnimation();
+             animateFinal();
+        });
+
+
+    </script>
+</body>
+</html>
